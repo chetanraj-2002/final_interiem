@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { HttpClientModule } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 // Angular Material
@@ -46,6 +46,7 @@ import { AssetListComponent } from './components/asset-list/asset-list.component
 import { ReadingChartComponent } from './components/reading-chart/reading-chart.component';
 import { ThresholdFormComponent } from './components/threshold-form/threshold-form.component';
 import { TicketPanelComponent } from './components/ticket-panel/ticket-panel.component';
+import { AuthInterceptor } from './services/auth.interceptor';
 
 @NgModule({
   declarations: [
@@ -71,7 +72,11 @@ import { TicketPanelComponent } from './components/ticket-panel/ticket-panel.com
     MatTooltipModule, MatPaginatorModule, MatDialogModule, MatSelectModule,
     BaseChartDirective
   ],
-  providers: [AuthGuard, provideCharts(withDefaultRegisterables())],
+  providers: [
+    AuthGuard,
+    provideCharts(withDefaultRegisterables()),
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule {}

@@ -11,15 +11,15 @@ import { AuthService } from '../../services/auth.service';
 })
 export class ForgotPasswordComponent {
   form: FormGroup;
-  loading  = false;
-  sent     = false;
+  loading = false;
+  sent = false;
   demoToken = '';
 
   constructor(
-    private fb:     FormBuilder,
+    private fb: FormBuilder,
     private router: Router,
-    private snack:  MatSnackBar,
-    private auth:   AuthService
+    private snack: MatSnackBar,
+    private auth: AuthService
   ) {
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]]
@@ -28,20 +28,23 @@ export class ForgotPasswordComponent {
 
   onSubmit(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+
     this.loading = true;
-    setTimeout(() => {
-      const result = this.auth.sendResetLink(this.form.value.email);
-      this.loading = false;
-      if (result.ok) {
-        this.sent      = true;
-        this.demoToken = localStorage.getItem('pm_reset_token_demo') ?? '';
-      } else {
-        this.snack.open(result.message, 'Close', { duration: 4000, panelClass: ['snack-error'] });
+    this.auth.sendResetLink(this.form.value.email).subscribe({
+      next: response => {
+        this.loading = false;
+        this.sent = true;
+        this.demoToken = '';
+        this.snack.open(response.message, 'Close', { duration: 4000 });
+      },
+      error: err => {
+        this.loading = false;
+        this.snack.open(err?.error?.message ?? 'Unable to request password reset.', 'Close', { duration: 4000, panelClass: ['snack-error'] });
       }
-    }, 900);
+    });
   }
 
-  goToReset()  { this.router.navigate(['/reset-password'], { queryParams: { token: this.demoToken } }); }
-  goToLogin()  { this.router.navigate(['/login']); }
-  get email()  { return this.form.get('email')!; }
+  goToReset() { this.router.navigate(['/reset-password'], { queryParams: { token: this.demoToken } }); }
+  goToLogin() { this.router.navigate(['/login']); }
+  get email() { return this.form.get('email')!; }
 }

@@ -7,10 +7,10 @@ import { AuthService } from '../../services/auth.service';
 function strongPasswordValidator(control: AbstractControl): ValidationErrors | null {
   const v: string = control.value ?? '';
   const errors: Record<string, boolean> = {};
-  if (v.length < 8)             errors['minLength']  = true;
-  if (!/[A-Z]/.test(v))        errors['uppercase']  = true;
-  if (!/[0-9]/.test(v))        errors['number']     = true;
-  if (!/[^A-Za-z0-9]/.test(v)) errors['special']    = true;
+  if (v.length < 8) errors['minLength'] = true;
+  if (!/[A-Z]/.test(v)) errors['uppercase'] = true;
+  if (!/[0-9]/.test(v)) errors['number'] = true;
+  if (!/[^A-Za-z0-9]/.test(v)) errors['special'] = true;
   return Object.keys(errors).length ? errors : null;
 }
 
@@ -27,22 +27,22 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
 })
 export class ResetPasswordComponent implements OnInit {
   form: FormGroup;
-  loading      = false;
-  showPass     = false;
-  showConfirm  = false;
-  token        = '';
+  loading = false;
+  showPass = false;
+  showConfirm = false;
+  token = '';
   invalidToken = false;
-  success      = false;
+  success = false;
 
   constructor(
-    private fb:    FormBuilder,
+    private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
-    private snack:  MatSnackBar,
-    private auth:   AuthService
+    private snack: MatSnackBar,
+    private auth: AuthService
   ) {
     this.form = this.fb.group({
-      password:        ['', [Validators.required, strongPasswordValidator]],
+      password: ['', [Validators.required, strongPasswordValidator]],
       confirmPassword: ['', Validators.required]
     }, { validators: passwordMatchValidator });
   }
@@ -54,27 +54,27 @@ export class ResetPasswordComponent implements OnInit {
 
   onSubmit(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+
     this.loading = true;
-    setTimeout(() => {
-      const result = this.auth.resetPassword(this.token, this.form.value.password);
-      this.loading = false;
-      if (result.ok) {
-        this.success = true;
-        this.snack.open('Password updated! Redirecting to login…', '', { duration: 2500, panelClass: ['snack-success'] });
-        setTimeout(() => this.router.navigate(['/login']), 2000);
-      } else {
-        this.snack.open(result.message, 'Close', { duration: 4000, panelClass: ['snack-error'] });
+    this.auth.resetPassword(this.token, this.form.value.password).subscribe({
+      next: result => {
+        this.loading = false;
+        this.snack.open(result.message, 'Close', { duration: 4000 });
+      },
+      error: err => {
+        this.loading = false;
+        this.snack.open(err?.error?.message ?? 'Unable to reset password.', 'Close', { duration: 4000, panelClass: ['snack-error'] });
         this.invalidToken = true;
       }
-    }, 800);
+    });
   }
 
   goToLogin() { this.router.navigate(['/login']); }
 
-  get password()        { return this.form.get('password')!; }
+  get password() { return this.form.get('password')!; }
   get confirmPassword() { return this.form.get('confirmPassword')!; }
-  hasMinLength()  { return !this.password.hasError('minLength'); }
-  hasUppercase()  { return !this.password.hasError('uppercase'); }
-  hasNumber()     { return !this.password.hasError('number'); }
-  hasSpecial()    { return !this.password.hasError('special'); }
+  hasMinLength() { return !this.password.hasError('minLength'); }
+  hasUppercase() { return !this.password.hasError('uppercase'); }
+  hasNumber() { return !this.password.hasError('number'); }
+  hasSpecial() { return !this.password.hasError('special'); }
 }
